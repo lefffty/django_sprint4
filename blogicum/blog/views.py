@@ -107,10 +107,24 @@ def profile(request, username):
     """
     Страница профиля пользователя
     """
-    profile = request.user
+
+    user = User.objects.get_by_natural_key(
+        username=username
+    )
+
+    posts = Post.objects.filter(
+        author_id__exact=user.pk,
+    ).order_by('pub_date')
+
+    paginator = Paginator(posts, 10)
+
+    page_number = request.GET.get('page')
+
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'profile': profile
+        'profile': user,
+        'page_obj': page_obj,
     }
 
     return render(
@@ -121,21 +135,9 @@ def profile(request, username):
 
 
 def edit_profile(request):
-    user = request.user
-
-    form = UserForm(
-        request.POST or None,
-        instance=user
-    )
-
-    context = {
-        'form': form,
-    }
-
     return render(
         request,
         'blog/user.html',
-        context=context,
     )
 
 
@@ -143,9 +145,19 @@ def add_comment(request, post_id):
     """
     Добавление комментария
     """
+    form = CommentForm(request.POST)
+
+    if form.is_valid():
+        form.save()
+
+    context = {
+        'form': form,
+    }
+
     return render(
         request,
         'blog/comment.html',
+        context,
     )
 
 
@@ -153,6 +165,7 @@ def edit_comment(request, post_id, comment_id):
     """
     Редактирование комментария
     """
+
     return render(
         request,
         'blog/comment.html',
@@ -163,6 +176,10 @@ def delete_comment(request, post_id, comment_id):
     """
     Удаление комментария
     """
+    instance = get_object_or_404(
+
+    )
+
     return render(
         request,
         'blog/comment.html',
@@ -170,11 +187,14 @@ def delete_comment(request, post_id, comment_id):
 
 
 def create_post(request):
-    form = PostForm()
+    form = PostForm(request.POST or None)
 
     context = {
         'form': form,
     }
+
+    if form.is_valid():
+        form.save()
 
     return render(
         request,
