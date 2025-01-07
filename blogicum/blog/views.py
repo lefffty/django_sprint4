@@ -99,7 +99,8 @@ def post_detail(request, id):
 
 def profile(request, username):
     """Страница профиля пользователя"""
-    user = User.objects.get_by_natural_key(
+    user = get_object_or_404(
+        User,
         username=username
     )
 
