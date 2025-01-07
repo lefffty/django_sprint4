@@ -156,6 +156,10 @@ def add_comment(request, post_id):
         comment.author = request.user
         comment.post_id = post_id
         comment.save()
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
 
     context = {
         'form': form,
@@ -182,6 +186,10 @@ def edit_comment(request, post_id, comment_id):
 
     if form.is_valid():
         form.save()
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
 
     context = {
         'form': form,
@@ -202,7 +210,8 @@ def delete_comment(request, post_id, comment_id):
     )
 
     form = CommentForm(
-        instance=instance
+        request.POST or None,
+        instance=instance,
     )
 
     if request.method == 'POST':
