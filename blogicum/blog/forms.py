@@ -1,5 +1,7 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
+
 
 from .models import Post, Comment
 
@@ -32,7 +34,7 @@ class CommentForm(forms.ModelForm):
         fields = ('text',)
 
 
-class UserForm(forms.ModelForm):
+class UserForm(UserCreationForm):
 
     class Meta:
         model = User

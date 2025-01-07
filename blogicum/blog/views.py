@@ -128,25 +128,17 @@ def profile(request, username):
 
 def edit_profile(request):
     """Страница редактирования данных пользователя"""
-    target_user = User.objects.get_by_natural_key(
-        username=request.user.username,
-    )
+    context = {}
 
     form = UserForm(
-        request.POST or None,
-        instance=target_user,
+        request.POST or None
     )
 
     if form.is_valid():
         form.save()
+        return redirect('blog:profile')
 
-    context = {
-        'form': form
-    }
-
-    context = {
-        'form': form,
-    }
+    context['form'] = form
 
     return render(
         request,
@@ -188,12 +180,13 @@ def edit_comment(request, post_id, comment_id):
         instance=instance
     )
 
+    if form.is_valid():
+        form.save()
+
+
     context = {
         'form': form,
     }
-
-    if form.is_valid():
-        form.save()
 
     return render(
         request,
@@ -213,13 +206,16 @@ def delete_comment(request, post_id, comment_id):
         instance=instance
     )
 
+    if request.method == 'POST':
+        instance.delete()
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
+    
     context = {
         'form': form,
     }
-
-    if request.method == 'POST':
-        instance.delete()
-        return redirect('blog:')
 
     return render(
         request,
@@ -236,6 +232,10 @@ def create_post(request):
         post = form.save(commit=False)
         post.author = request.user
         post.save()
+        return redirect(
+            'blog:profile',
+            request.user.username
+        )
 
     context = {
         'form': form,
@@ -259,6 +259,12 @@ def delete_post(request, post_id):
         request.POST or None,
         instance=instance,
     )
+
+    if request.method == 'POST':
+        instance.delete()
+        return redirect(
+            'blog:index',
+        )
 
     context = {
         'form': form,
