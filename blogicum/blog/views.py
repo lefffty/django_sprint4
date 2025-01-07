@@ -183,7 +183,6 @@ def edit_comment(request, post_id, comment_id):
     if form.is_valid():
         form.save()
 
-
     context = {
         'form': form,
     }
@@ -212,7 +211,7 @@ def delete_comment(request, post_id, comment_id):
             'blog:post_detail',
             post_id,
         )
-    
+
     context = {
         'form': form,
     }
