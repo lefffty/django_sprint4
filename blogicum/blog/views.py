@@ -12,9 +12,7 @@ User = get_user_model()
 
 
 def index(request):
-    """
-    Главная страница проекта
-    """
+    """Главная страница проекта"""
     posts = Post.objects.filter(
         pub_date__lte=date.today(),
         is_published__exact=True,
@@ -39,9 +37,7 @@ def index(request):
 
 
 def category_posts(request, category_slug):
-    """
-    Страница отдельной категории
-    """
+    """Страница отдельной категории"""
     posts = Post.objects.filter(
         category__slug__exact=category_slug,
         is_published__exact=True,
@@ -73,9 +69,7 @@ def category_posts(request, category_slug):
 
 
 def post_detail(request, id):
-    """
-    Страница отдельной публикации
-    """
+    """Страница отдельной публикации"""
     post = get_object_or_404(
         Post,
         pk=id,
@@ -104,9 +98,7 @@ def post_detail(request, id):
 
 
 def profile(request, username):
-    """
-    Страница профиля пользователя
-    """
+    """Страница профиля пользователя"""
 
     user = User.objects.get_by_natural_key(
         username=username
@@ -135,9 +127,7 @@ def profile(request, username):
 
 
 def edit_profile(request):
-    """
-    Страница редактирования данных пользователя
-    """
+    """Страница редактирования данных пользователя"""
     target_user = User.objects.get_by_natural_key(
         username=request.user.username,
     )
@@ -166,9 +156,7 @@ def edit_profile(request):
 
 
 def add_comment(request, post_id):
-    """
-    Добавление комментария
-    """
+    """Добавление комментария"""
     form = CommentForm(request.POST)
 
     if form.is_valid():
@@ -189,9 +177,7 @@ def add_comment(request, post_id):
 
 
 def edit_comment(request, post_id, comment_id):
-    """
-    Редактирование комментария
-    """
+    """Редактирование комментария"""
     instance = get_object_or_404(
         Comment,
         pk=comment_id
@@ -245,9 +231,7 @@ def delete_comment(request, post_id, comment_id):
 
 
 def create_post(request):
-    """
-    Создание публикации
-    """
+    """Создание публикации"""
     form = PostForm(request.POST or None)
 
     if form.is_valid():
@@ -267,9 +251,7 @@ def create_post(request):
 
 
 def delete_post(request, post_id):
-    """
-    Удаление публикации
-    """
+    """Удаление публикации"""
     instance = get_object_or_404(
         Post,
         pk=post_id,
@@ -292,9 +274,7 @@ def delete_post(request, post_id):
 
 
 def edit_post(request, post_id):
-    """
-    Редактирование публикации
-    """
+    """Редактирование публикации"""
     instance = get_object_or_404(
         Post,
         pk=post_id,
