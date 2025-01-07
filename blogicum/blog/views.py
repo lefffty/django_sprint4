@@ -42,7 +42,7 @@ def category_posts(request, category_slug):
         category__slug__exact=category_slug,
         is_published__exact=True,
         pub_date__lte=date.today(),
-    ).order_by('pub_date')
+    ).order_by('-pub_date')
 
     category = get_object_or_404(
         Category,
