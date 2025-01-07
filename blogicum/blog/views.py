@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, get_list_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 
@@ -135,9 +135,33 @@ def profile(request, username):
 
 
 def edit_profile(request):
+    """
+    Страница редактирования данных пользователя
+    """
+    target_user = User.objects.get_by_natural_key(
+        username=request.user.username,
+    )
+
+    form = UserForm(
+        request.POST or None,
+        instance=target_user,
+    )
+
+    if form.is_valid():
+        form.save()
+
+    context = {
+        'form': form
+    }
+
+    context = {
+        'form': form,
+    }
+
     return render(
         request,
         'blog/user.html',
+        context,
     )
 
 
@@ -148,7 +172,10 @@ def add_comment(request, post_id):
     form = CommentForm(request.POST)
 
     if form.is_valid():
-        form.save()
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post_id = post_id
+        comment.save()
 
     context = {
         'form': form,
@@ -165,29 +192,15 @@ def edit_comment(request, post_id, comment_id):
     """
     Редактирование комментария
     """
-
-    return render(
-        request,
-        'blog/comment.html',
-    )
-
-
-def delete_comment(request, post_id, comment_id):
-    """
-    Удаление комментария
-    """
     instance = get_object_or_404(
-
+        Comment,
+        pk=comment_id
     )
 
-    return render(
-        request,
-        'blog/comment.html',
+    form = CommentForm(
+        request.POST or None,
+        instance=instance
     )
-
-
-def create_post(request):
-    form = PostForm(request.POST or None)
 
     context = {
         'form': form,
@@ -198,12 +211,65 @@ def create_post(request):
 
     return render(
         request,
+        'blog/comment.html',
+        context
+    )
+
+
+def delete_comment(request, post_id, comment_id):
+    """
+    Удаление комментария
+    """
+    instance = get_object_or_404(
+        Comment,
+        pk=comment_id,
+    )
+
+    form = CommentForm(
+        instance=instance
+    )
+
+    context = {
+        'form': form,
+    }
+
+    if request.method == 'POST':
+        instance.delete()
+        return redirect('blog:')
+
+    return render(
+        request,
+        'blog/comment.html',
+        context
+    )
+
+
+def create_post(request):
+    """
+    Создание публикации
+    """
+    form = PostForm(request.POST or None)
+
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.save()
+
+    context = {
+        'form': form,
+    }
+
+    return render(
+        request,
         'blog/create.html',
         context=context
     )
 
 
 def delete_post(request, post_id):
+    """
+    Удаление публикации
+    """
     instance = get_object_or_404(
         Post,
         pk=post_id,
@@ -226,6 +292,9 @@ def delete_post(request, post_id):
 
 
 def edit_post(request, post_id):
+    """
+    Редактирование публикации
+    """
     instance = get_object_or_404(
         Post,
         pk=post_id,
