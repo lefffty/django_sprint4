@@ -106,7 +106,7 @@ def profile(request, username):
 
     posts = Post.objects.filter(
         author_id__exact=user.pk,
-    ).order_by('pub_date')
+    ).order_by('-pub_date')
 
     paginator = Paginator(posts, 10)
 
