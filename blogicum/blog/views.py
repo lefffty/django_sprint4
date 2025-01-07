@@ -99,7 +99,6 @@ def post_detail(request, id):
 
 def profile(request, username):
     """Страница профиля пользователя"""
-
     user = User.objects.get_by_natural_key(
         username=username
     )
@@ -203,9 +202,7 @@ def edit_comment(request, post_id, comment_id):
 
 
 def delete_comment(request, post_id, comment_id):
-    """
-    Удаление комментария
-    """
+    """Удаление комментария"""
     instance = get_object_or_404(
         Comment,
         pk=comment_id,
