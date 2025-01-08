@@ -261,7 +261,8 @@ def create_post(request):
         post.save()
         send_mail(
             subject='Публикация поста',
-            message=f'Вы опубликовали пост "{title}" в категории "{category}"!',
+            message=f'Вы опубликовали пост "{title}"'
+            f' в категории "{category}"!',
             from_email='publish_post@blogicum.not',
             recipient_list=['admin@blogicum.not'],
             fail_silently=True,
