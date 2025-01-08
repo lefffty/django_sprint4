@@ -78,17 +78,17 @@ def category_posts(request, category_slug):
     )
 
 
-def post_detail(request, id):
+def post_detail(request, post_id):
     """Страница отдельной публикации"""
     post = get_object_or_404(
         Post,
-        pk=id,
+        pk=post_id,
         is_published__exact=True,
         category__is_published__exact=True
     )
 
     comments = Comment.objects.filter(
-        post__exact=id,
+        post__exact=post_id,
     ).order_by('created_at')
 
     form = CommentForm()
@@ -166,9 +166,26 @@ def edit_profile(request):
 
 def add_comment(request, post_id):
     """Добавление комментария"""
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            'pages/404.html',
+        )
+
+    post = get_object_or_404(
+        Post,
+        pk=post_id,
+    )
+
+    if post is None:
+        return render(
+            request,
+            'pages/404.html',
+        )
+
     form = CommentForm(request.POST)
 
-    if form.is_valid():
+    if form.is_valid() and request.user.is_authenticated:
         comment = form.save(commit=False)
         comment.author = request.user
         comment.post_id = post_id
@@ -191,10 +208,27 @@ def add_comment(request, post_id):
 
 def edit_comment(request, post_id, comment_id):
     """Редактирование комментария"""
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            'pages/404.html',
+        )
+
+    post_instance = get_object_or_404(
+        Post,
+        pk=post_id,
+    )
+
     instance = get_object_or_404(
         Comment,
         pk=comment_id,
     )
+
+    if instance.author != request.user:
+        return render(
+            request,
+            'pages/404.html'
+        )
 
     form = CommentForm(
         request.POST or None,
@@ -203,10 +237,15 @@ def edit_comment(request, post_id, comment_id):
 
     context = {
         'form': form,
+        'comment': instance,
     }
 
     if form.is_valid():
         form.save()
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
 
     return render(
         request,
@@ -222,10 +261,15 @@ def delete_comment(request, post_id, comment_id):
         pk=comment_id,
     )
 
-    form = CommentForm(
-        request.POST or None,
-        instance=instance,
-    )
+    if not request.user == instance.author:
+        return render(
+            request,
+            'pages/404.html',
+        )
+
+    context = {
+        'comment': instance,
+    }
 
     if request.method == 'POST':
         instance.delete()
@@ -233,11 +277,6 @@ def delete_comment(request, post_id, comment_id):
             'blog:post_detail',
             post_id,
         )
-
-    context = {
-        'form': form,
-        'comment': instance,
-    }
 
     return render(
         request,
@@ -253,7 +292,7 @@ def create_post(request):
         files=request.FILES or None,
     )
 
-    if form.is_valid():
+    if form.is_valid() and request.user.is_authenticated:
         post = form.save(commit=False)
         post.author = request.user
         category = post.category
@@ -290,20 +329,26 @@ def delete_post(request, post_id):
         pk=post_id,
     )
 
+    if request.user != instance.author:
+        return render(
+            request,
+            'pages/404.hmtl',
+        )
+
     form = PostForm(
         request.POST or None,
         instance=instance,
     )
+
+    context = {
+        'form': form,
+    }
 
     if request.method == 'POST':
         instance.delete()
         return redirect(
             'blog:index',
         )
-
-    context = {
-        'form': form,
-    }
 
     return render(
         request,
@@ -314,10 +359,17 @@ def delete_post(request, post_id):
 
 def edit_post(request, post_id):
     """Редактирование публикации"""
+
     instance = get_object_or_404(
         Post,
         pk=post_id,
     )
+
+    if request.user != instance.author:
+        return render(
+            request,
+            'pages/404.html'
+        )
 
     form = PostForm(
         request.POST or None,
@@ -329,7 +381,8 @@ def edit_post(request, post_id):
         'form': form
     }
 
-    if form.is_valid():
+    if (form.is_valid() and instance.author == request.user
+            and request.user.is_authenticated):
         form.save()
         return redirect(
             'blog:post_detail',
