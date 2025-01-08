@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 
 from datetime import date
@@ -248,7 +249,16 @@ def create_post(request):
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
+        category = post.category
+        title = post.title
         post.save()
+        send_mail(
+            subject='Публикация поста',
+            message=f'Вы опубликовали пост "{title}" в категории "{category}"!',
+            from_email='publish_post@blogicum.not',
+            recipient_list=['admin@blogicum.not'],
+            fail_silently=True,
+        )
         return redirect(
             'blog:profile',
             request.user.username
@@ -313,6 +323,10 @@ def edit_post(request, post_id):
 
     if form.is_valid():
         form.save()
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
 
     return render(
         request,
