@@ -17,7 +17,9 @@ def index(request):
         pub_date__lte=date.today(),
         is_published__exact=True,
         category__is_published__exact=True,
-    ).order_by('-pub_date')
+    ).order_by(
+        '-pub_date'
+    )
 
     paginator = Paginator(posts, 10)
 
@@ -42,7 +44,9 @@ def category_posts(request, category_slug):
         category__slug__exact=category_slug,
         is_published__exact=True,
         pub_date__lte=date.today(),
-    ).order_by('-pub_date')
+    ).order_by(
+        '-pub_date'
+    )
 
     category = get_object_or_404(
         Category,
