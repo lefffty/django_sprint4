@@ -73,14 +73,13 @@ def post_detail(request, id):
     post = get_object_or_404(
         Post,
         pk=id,
-        pub_date__lte=date.today(),
         is_published__exact=True,
         category__is_published__exact=True
     )
 
     comments = Comment.objects.filter(
         post__exact=id,
-    )
+    ).order_by('created_at')
 
     form = CommentForm()
 
@@ -128,17 +127,23 @@ def profile(request, username):
 
 def edit_profile(request):
     """Страница редактирования данных пользователя"""
-    context = {}
+    instance = get_object_or_404(
+        User,
+        pk=request.user.id,
+    )
 
     form = UserForm(
-        request.POST or None
+        request.POST or None,
+        instance=instance,
+        files=request.FILES or None,
     )
+
+    context = {
+        'form': form
+    }
 
     if form.is_valid():
         form.save()
-        return redirect('blog:profile')
-
-    context['form'] = form
 
     return render(
         request,
@@ -176,29 +181,25 @@ def edit_comment(request, post_id, comment_id):
     """Редактирование комментария"""
     instance = get_object_or_404(
         Comment,
-        pk=comment_id
+        pk=comment_id,
     )
 
     form = CommentForm(
         request.POST or None,
-        instance=instance
+        instance=instance,
     )
-
-    if form.is_valid():
-        form.save()
-        return redirect(
-            'blog:post_detail',
-            post_id,
-        )
 
     context = {
         'form': form,
     }
 
+    if form.is_valid():
+        form.save()
+
     return render(
         request,
         'blog/comment.html',
-        context
+        context,
     )
 
 
@@ -223,6 +224,7 @@ def delete_comment(request, post_id, comment_id):
 
     context = {
         'form': form,
+        'comment': instance,
     }
 
     return render(
@@ -234,7 +236,10 @@ def delete_comment(request, post_id, comment_id):
 
 def create_post(request):
     """Создание публикации"""
-    form = PostForm(request.POST or None)
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None,
+    )
 
     if form.is_valid():
         post = form.save(commit=False)
@@ -295,11 +300,15 @@ def edit_post(request, post_id):
     form = PostForm(
         request.POST or None,
         instance=instance,
+        files=request.FILES or None,
     )
 
     context = {
-        'form': form,
+        'form': form
     }
+
+    if form.is_valid():
+        form.save()
 
     return render(
         request,
