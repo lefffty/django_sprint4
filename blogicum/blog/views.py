@@ -214,10 +214,10 @@ def edit_comment(request, post_id, comment_id):
             'pages/404.html',
         )
 
-    post_instance = get_object_or_404(
-        Post,
-        pk=post_id,
-    )
+    # post_instance = get_object_or_404(
+    #     Post,
+    #     pk=post_id,
+    # )
 
     instance = get_object_or_404(
         Comment,
@@ -359,7 +359,6 @@ def delete_post(request, post_id):
 
 def edit_post(request, post_id):
     """Редактирование публикации"""
-
     instance = get_object_or_404(
         Post,
         pk=post_id,
@@ -377,12 +376,17 @@ def edit_post(request, post_id):
         files=request.FILES or None,
     )
 
+    if not request.user.is_authenticated:
+        return redirect(
+            'blog:post_detail',
+            post_id,
+        )
+
     context = {
         'form': form
     }
 
-    if (form.is_valid() and instance.author == request.user
-            and request.user.is_authenticated):
+    if (form.is_valid() and instance.author == request.user):
         form.save()
         return redirect(
             'blog:post_detail',
