@@ -83,9 +83,15 @@ def post_detail(request, post_id):
     post = get_object_or_404(
         Post,
         pk=post_id,
-        is_published__exact=True,
-        category__is_published__exact=True
+        # is_published__exact=True,
+        # category__is_published__exact=True
     )
+
+    if (post.is_published is False) and (request.user != post.author):
+        return render(
+            request,
+            'pages/404.html',
+        )
 
     comments = Comment.objects.filter(
         post__exact=post_id,
@@ -113,11 +119,19 @@ def profile(request, username):
         username=username
     )
 
-    posts = Post.objects.filter(
-        author_id__exact=user.pk,
-    ).order_by('-pub_date').annotate(
-        comment_count=Count('comment')
-    )
+    if request.user == user:
+        posts = Post.objects.filter(
+            author_id__exact=user.pk,
+        ).order_by('-pub_date').annotate(
+            comment_count=Count('comment')
+        )
+    else:
+        posts = Post.objects.filter(
+            author_id__exact=user.pk,
+            is_published__exact=True,
+        ).order_by('-pub_date').annotate(
+            comment_count=Count('comment')
+        )
 
     paginator = Paginator(posts, 10)
 
@@ -332,7 +346,7 @@ def delete_post(request, post_id):
     if request.user != instance.author:
         return render(
             request,
-            'pages/404.hmtl',
+            'pages/404.html',
         )
 
     form = PostForm(
@@ -365,9 +379,9 @@ def edit_post(request, post_id):
     )
 
     if request.user != instance.author:
-        return render(
-            request,
-            'pages/404.html'
+        return redirect(
+            'blog:post_detail',
+            post_id,
         )
 
     form = PostForm(
@@ -376,17 +390,11 @@ def edit_post(request, post_id):
         files=request.FILES or None,
     )
 
-    if not request.user.is_authenticated:
-        return redirect(
-            'blog:post_detail',
-            post_id,
-        )
-
     context = {
         'form': form
     }
 
-    if (form.is_valid() and instance.author == request.user):
+    if form.is_valid():
         form.save()
         return redirect(
             'blog:post_detail',
