@@ -198,7 +198,11 @@ def add_comment(request, post_id):
             'pages/404.html',
         )
 
-    form = CommentForm(request.POST)
+    form = CommentForm(request.POST or None)
+
+    context = {
+        'form': form,
+    }
 
     if form.is_valid() and request.user.is_authenticated:
         comment = form.save(commit=False)
@@ -209,10 +213,6 @@ def add_comment(request, post_id):
             'blog:post_detail',
             post_id,
         )
-
-    context = {
-        'form': form,
-    }
 
     return render(
         request,
@@ -266,6 +266,7 @@ def edit_comment(request, post_id, comment_id):
 
 def delete_comment(request, post_id, comment_id):
     """Удаление комментария"""
+
     instance = get_object_or_404(
         Comment,
         pk=comment_id,
