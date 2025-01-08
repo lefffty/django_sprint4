@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
+from django.db.models import Count
 
 from datetime import date
 
@@ -20,6 +21,8 @@ def index(request):
         category__is_published__exact=True,
     ).order_by(
         '-pub_date'
+    ).annotate(
+        comment_count=Count('comment')
     )
 
     paginator = Paginator(posts, 10)
@@ -47,6 +50,8 @@ def category_posts(request, category_slug):
         pub_date__lte=date.today(),
     ).order_by(
         '-pub_date'
+    ).annotate(
+        comment_count=Count('comment')
     )
 
     category = get_object_or_404(
@@ -110,7 +115,9 @@ def profile(request, username):
 
     posts = Post.objects.filter(
         author_id__exact=user.pk,
-    ).order_by('-pub_date')
+    ).order_by('-pub_date').annotate(
+        comment_count=Count('comment')
+    )
 
     paginator = Paginator(posts, 10)
 
