@@ -83,14 +83,15 @@ def post_detail(request, post_id):
     post = get_object_or_404(
         Post,
         pk=post_id,
-        # is_published__exact=True,
-        # category__is_published__exact=True
     )
+    # print(post.category.is_published)
 
-    if (post.is_published is False) and (request.user != post.author):
+    if (post.category.is_published is False or post.is_published
+            is False) and (request.user != post.author) or (
+            not request.user.is_authenticated):
         return render(
             request,
-            'pages/404.html',
+            'pages/403csrf.html',
         )
 
     comments = Comment.objects.filter(
@@ -227,11 +228,6 @@ def edit_comment(request, post_id, comment_id):
             request,
             'pages/404.html',
         )
-
-    # post_instance = get_object_or_404(
-    #     Post,
-    #     pk=post_id,
-    # )
 
     instance = get_object_or_404(
         Comment,
