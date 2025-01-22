@@ -60,6 +60,12 @@ def category_posts(request, category_slug):
         is_published__exact=True,
     )
 
+    if category.is_published is False:
+        return render(
+            request,
+            'pages/403csrf.html',
+        )
+
     paginator = Paginator(posts, 10)
 
     page_number = request.GET.get('page')
@@ -84,14 +90,12 @@ def post_detail(request, post_id):
         Post,
         pk=post_id,
     )
-    # print(post.category.is_published)
 
-    if (post.category.is_published is False or post.is_published
-            is False) and (request.user != post.author) or (
-            not request.user.is_authenticated):
+    if request.user != post.author and post.is_published is False:
         return render(
             request,
-            'pages/403csrf.html',
+            'pages/404.html',
+            status=404,
         )
 
     comments = Comment.objects.filter(
@@ -130,6 +134,7 @@ def profile(request, username):
         posts = Post.objects.filter(
             author_id__exact=user.pk,
             is_published__exact=True,
+            category__is_published__exact=True,
         ).order_by('-pub_date').annotate(
             comment_count=Count('comment')
         )
