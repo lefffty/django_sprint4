@@ -271,7 +271,6 @@ def edit_comment(request, post_id, comment_id):
 
 def delete_comment(request, post_id, comment_id):
     """Удаление комментария"""
-
     instance = get_object_or_404(
         Comment,
         pk=comment_id,
